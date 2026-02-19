@@ -20,7 +20,7 @@ classDiagram
 
         +Elevator(floor_number)
         +order(floor_number, button_type)
-        +stop()
+        +setStopped(stopped)
         +update_floor(floor)
         +set_obstructed(obstructed)
     }
@@ -60,7 +60,7 @@ classDiagram
     }
 ```
 
-### A.1.3 Communication
+### A.1.2 Event Loop
 
 ```mermaid
 sequenceDiagram
@@ -112,45 +112,20 @@ stateDiagram-v2
 
     DoorsClosed --> GoingDown : order or timer
     DoorsClosed --> GoingUp : order or timer
-    DoorsClosed --> DoorsOpen : order
+    DoorsClosed --> DoorsOpen : order or stop
+    DoorsOpen --> DoorsOpen : stop
+
+    GoingUp --> Stopped : stop
+    GoingDown --> Stopped : stop
+    Stopped --> BetweenFloors : unstop
+    BetweenFloors --> Stopped : stop
+    BetweenFloors --> GoingUp : order
+    BetweenFloors --> GoingDown : order
+
 
     GoingUp --> DoorsOpen : update_floor
     GoingDown --> DoorsOpen : update_floor
     DoorsOpen --> DoorsClosed : timer
     DoorsOpen --> GoingDown : timer
     DoorsOpen --> GoingUp : timer
-
-
-```
-
-```python
-
-reader = HardwareReader()
-floor = reader.read_floor()
-elevator = Elevator(floor)
-
-while True:
-    reader.loop()
-
-```
-
-```mermaid
-stateDiagram-v2
-    Created --> PendingPayment : Place Order
-    PendingPayment --> Paid : Payment Successful
-    PendingPayment --> Cancelled : Payment Failed
-
-    Paid --> Processing : Confirm Order
-    Processing --> Shipped : Ship Order
-    Shipped --> Delivered : Confirm Delivery
-
-    Delivered --> [*]
-    Cancelled --> [*]
-
-    state Processing {
-        [*] --> Packing
-        Packing --> QualityCheck
-        QualityCheck --> ReadyForShipment
-        ReadyForShipment --> [*]
-    }
 ```
