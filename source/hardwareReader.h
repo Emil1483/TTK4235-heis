@@ -8,4 +8,4 @@ struct HardwareReader{
 
 void doReading(struct HardwareReader* reader);
 
-struct HardwareReader hardwareReader_constructor();
+struct HardwareReader* hardwareReader_constructor();

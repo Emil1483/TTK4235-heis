@@ -2,6 +2,7 @@
 #include "driver/elevio.h"
 #include "hardwareReader.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 enum State{
     GOING_UP, 
@@ -32,4 +33,4 @@ void set_stopped(struct Elevator* elevator, int shouldStop);
 void set_obstructed(struct Elevator* elevator, int obstructed);
 void order(struct Elevator* elevator, int floor, ButtonType button);
 
-struct Elevator elevator_constructor(int floor);
+struct Elevator* elevator_constructor(int floor);
