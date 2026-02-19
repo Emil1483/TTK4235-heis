@@ -95,7 +95,6 @@ sequenceDiagram
 
 ```
 
-
 ## A.2 Modules
 
 ### A.2.1 State Machine
