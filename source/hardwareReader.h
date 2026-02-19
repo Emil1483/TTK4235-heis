@@ -2,10 +2,10 @@
 #include "elevator.h"
 
 struct HardwareReader{
-    struct Elevator elevator;
+    struct Elevator* elevator;
     void (*doReading)();
 };
 
-void doReading();
+void doReading(struct HardwareReader* reader);
 
 struct HardwareReader hardwareReader_constructor();

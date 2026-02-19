@@ -21,6 +21,15 @@ struct Elevator{
     //Timer timer;
     int current_floor;
     int obstructed;
+    void (*update_floor)(struct Elevator* elevator, int floor);
+    void (*set_stopped)(struct Elevator* elevator, int shouldStop);
+    void (*set_obstructed)(struct Elevator* elevator, int obstructed);
+    void (*order)(struct Elevator* elevator, int floor, ButtonType button);
 };
+
+void update_floor(struct Elevator* elevator, int floor);
+void set_stopped(struct Elevator* elevator, int shouldStop);
+void set_obstructed(struct Elevator* elevator, int obstructed);
+void order(struct Elevator* elevator, int floor, ButtonType button);
 
 struct Elevator elevator_constructor(int floor);
