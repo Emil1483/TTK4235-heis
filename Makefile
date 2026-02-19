@@ -2,7 +2,7 @@
 EXECUTABLE  = elevator
 
 COMPILER    = clang
-CFLAGS      = -Wall -g -std=gnu11 -fsanitize=address
+CFLAGS      = -Wall -g -std=gnu11 -fsanitize=address -Isource -Isource/driver
 LDFLAGS     = -fsanitize=address
 EXCLUDE     = '*test*'
 
@@ -13,6 +13,12 @@ OBJECTDIR = build
 SOURCES := $(patsubst $(SOURCEDIR)/%, %, $(shell find $(SOURCEDIR) -name '*.c'  ! -name $(EXCLUDE)  ! -path $(EXCLUDE)))
 OBJECTS = $(addprefix $(OBJECTDIR)/, $(SOURCES:.c=.o))
 
+TESTDIR	     = tests
+TEST_SOURCES := $(wildcard $(TESTDIR)/*.c)
+TEST_NAMES   := $(notdir $(TEST_SOURCES:.c=))
+TEST_BINS    := $(addprefix $(OBJECTDIR)/tests/, $(TEST_NAMES))
+PROJECT_OBJECTS := $(filter-out $(OBJECTDIR)/main.o, $(OBJECTS))
+
 all: $(EXECUTABLE) 
 
 rebuild: clean all
@@ -20,6 +26,18 @@ rebuild: clean all
 clean:
 	rm -f $(EXECUTABLE)
 	rm -rf $(OBJECTDIR)
+
+test: $(TEST_BINS)
+	@echo "Running tests..."
+	@for test in $(TEST_BINS); do \
+		echo "Running $$test"; \
+		$$test || exit 1; \
+	done
+	@echo "All tests passed!"
+
+$(OBJECTDIR)/tests/%: $(TESTDIR)/%.c $(PROJECT_OBJECTS)
+	@mkdir -p $(@D)
+	$(COMPILER) $(CFLAGS) $< $(PROJECT_OBJECTS) -o $@ $(LDFLAGS)
 
 ## executable depends on object files: link them
 $(EXECUTABLE): $(OBJECTS) 
