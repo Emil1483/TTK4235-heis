@@ -31,6 +31,7 @@ classDiagram
     }
 
     class Queue {
+        +get(index)
         +place(index, order)
         +remove(floor_number)
     }
