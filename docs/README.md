@@ -8,10 +8,13 @@ Welcome to docs.
 
 ```mermaid
 classDiagram
+    Elevator "1" -- "1" HardwareReader
+    Elevator "1" -- "1" State
+    Elevator "1" -- "1" Queue
+    Elevator "1" -- "1" Timer
+    Queue "1" -- "1..*" Order
+
     class Elevator {
-        -State state
-        -Queue floor_queue
-        -Timer timer
         -int current_floor
         -bool obstructed
 
@@ -20,6 +23,21 @@ classDiagram
         +stop()
         +update_floor(floor)
         +set_obstructed(obstructed)
+    }
+
+    class Timer {
+        +reset(delay)
+        +cancel()
+    }
+
+    class Queue {
+        +place(index, order)
+        +remove(floor_number)
+    }
+
+    class Order {
+        ButtonType button_type
+        int floor_number
     }
 
     class State {
@@ -36,14 +54,8 @@ classDiagram
         HALL_DOWN
         CABIN
     }
-```
 
-### A.1.2 Hardware Reader
-
-```mermaid
-classDiagram
     class HardwareReader {
-        -Elevator elevator
         +loop()
     }
 ```
@@ -97,8 +109,6 @@ stateDiagram-v2
     fork_state --> DoorsClosed : vaild floor
 
     Unknown --> DoorsClosed : update_floor
-
-    
 
     DoorsClosed --> GoingDown : order or timer
     DoorsClosed --> GoingUp : order or timer
