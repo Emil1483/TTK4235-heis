@@ -2,7 +2,7 @@
 EXECUTABLE  = elevator
 
 COMPILER    = clang
-CFLAGS      = -Wall -g -std=gnu11 -fsanitize=address -Isource -Isource/driver
+CFLAGS      = -Wall -g -std=gnu11 -fsanitize=address -pthread -Isource -Isource/driver
 LDFLAGS     = -fsanitize=address
 EXCLUDE     = '*test*'
 
@@ -34,6 +34,10 @@ test: $(TEST_BINS)
 		$$test || exit 1; \
 	done
 	@echo "All tests passed!"
+
+test_%: $(OBJECTDIR)/tests/test_%
+	@echo "Running $<"
+	@$<
 
 $(OBJECTDIR)/tests/%: $(TESTDIR)/%.c $(PROJECT_OBJECTS)
 	@mkdir -p $(@D)
