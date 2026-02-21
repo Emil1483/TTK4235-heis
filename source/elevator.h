@@ -1,36 +1,31 @@
 #pragma once
 #include "driver/elevio.h"
-#include "hardwareReader.h"
+#include "queue.h"
+#include "timer.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-enum State{
-    GOING_UP, 
-    DOORS_OPEN, 
-    DOOR_CLOSED, 
+typedef enum {
+    UNKNOWN,
+    DOORS_CLOSED,
     GOING_DOWN,
-    UNKNOWN
-};
+    STOPPED,
+    BETWEEN_FLOORS,
+    GOING_UP,
+    DOORS_OPEN,
+} State;
 
-struct Queue{
-    int i;//make the queue
-};
-
-struct Elevator{
-    enum State state;
-    struct Queue queue;
-    //Timer timer;
+typedef struct {
+    State state;
+    Queue *queue;
+    Timer *timer;
     int current_floor;
     int obstructed;
-    void (*update_floor)(struct Elevator* elevator, int floor);
-    void (*set_stopped)(struct Elevator* elevator, int shouldStop);
-    void (*set_obstructed)(struct Elevator* elevator, int obstructed);
-    void (*order)(struct Elevator* elevator, int floor, ButtonType button);
-};
+} Elevator;
 
-void update_floor(struct Elevator* elevator, int floor);
-void set_stopped(struct Elevator* elevator, int shouldStop);
-void set_obstructed(struct Elevator* elevator, int obstructed);
-void order(struct Elevator* elevator, int floor, ButtonType button);
+void update_floor(Elevator *elevator, int floor);
+void set_stopped(Elevator *elevator, int shouldStop);
+void set_obstructed(Elevator *elevator, int obstructed);
+void order(Elevator *elevator, int floor, ButtonType button);
 
-struct Elevator* elevator_constructor(int floor);
+Elevator *elevator_constructor(int floor);

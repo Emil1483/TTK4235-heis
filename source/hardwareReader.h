@@ -2,7 +2,7 @@
 #include "elevator.h"
 
 struct HardwareReader{
-    struct Elevator* elevator;
+    Elevator* elevator;
     void (*doReading)();
 };
 

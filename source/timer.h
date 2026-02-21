@@ -10,9 +10,10 @@ typedef struct {
     bool is_done;
     pthread_t thread_id;
     float delay;
-    void (*on_fire)();
+    void (*on_fire)(void *on_fire_arg);
+    void *on_fire_arg;
 } Timer;
 
-Timer *init_timer();
+Timer *init_timer(void *on_fire_arg, void (*on_fire)(void *on_fire_arg));
 void reset(Timer *timer, float delay);
 void cancel(Timer *timer);

@@ -1,10 +1,12 @@
 #include "timer.h"
 #include <math.h>
 
-Timer *init_timer() {
+Timer *init_timer(void *on_fire_arg, void (*on_fire)(void *on_fire_arg)) {
     Timer *p_timer = malloc(sizeof(Timer));
     p_timer->has_started = false;
     p_timer->is_done = false;
+    p_timer->on_fire_arg = on_fire_arg;
+    p_timer->on_fire = on_fire;
     return p_timer;
 }
 
@@ -16,7 +18,7 @@ void *timer_function(void *arg) {
     printf("sleeping for %i seconds and %i nanoseconds\n", seconds,
            nanoseconds);
     nanosleep(&(struct timespec){seconds, nanoseconds}, NULL);
-    p_timer->on_fire();
+    p_timer->on_fire(p_timer->on_fire_arg);
     p_timer->is_done = true;
     return NULL;
 }

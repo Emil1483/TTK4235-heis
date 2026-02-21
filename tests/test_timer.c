@@ -3,14 +3,13 @@
 
 int global_variable = 0;
 
-void timer_fire() {
+void timer_fire(void *arg) {
     global_variable += 1;
     printf("Timer fired!\n");
 }
 
 int main() {
-    Timer *p_timer = init_timer();
-    p_timer->on_fire = timer_fire;
+    Timer *p_timer = init_timer(NULL, timer_fire);
 
     // check that we fire within 0.1 seconds after delay
     reset(p_timer, 0.2);
