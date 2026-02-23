@@ -1,6 +1,5 @@
 #pragma once
 #include "driver/elevio.h"
-#include "queue.h"
 #include "timer.h"
 #include <stdio.h>
 #include <stdlib.h>
