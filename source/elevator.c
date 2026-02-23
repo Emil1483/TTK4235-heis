@@ -2,6 +2,7 @@
 #include "driver/elevio.h"
 #include "hardwareReader.h"
 #include "queue.h"
+#include "orderMatrix.h"
 
 #define TIMER_DELAY 3.0
 
@@ -19,14 +20,14 @@ void update_floor(Elevator *elevator, int floor) {
 
     elevator->current_floor = floor;
 
-    if (elevator->queue->length == 0 ||
-        get(elevator->queue, 0).floor_number != floor) {
-        return;
+    if(!should_stop_at_floor(elevator)) return;
+
+    for(int button=0;button<N_BUTTONS;button++){
+        elevator->order_matrix->matrix[floor][button]=0;
     }
 
-    remove_orders(elevator->queue, floor);
-    elevator->state = DOORS_OPEN;
     elevio_motorDirection(DIRN_STOP);
+    elevator->state = DOORS_OPEN;
     reset(elevator->timer, TIMER_DELAY);
 }
 void set_stopped(Elevator *elevator, int shouldStop) {}
@@ -34,75 +35,98 @@ void set_obstructed(Elevator *elevator, int obstructed) {
     elevator->obstructed = obstructed;
 }
 void order(Elevator *elevator, int floor, ButtonType button) {
-    Order order;
-    order.button_type = button;
-    order.floor_number = floor;
-    if (elevator->current_floor!=floor){
-        place_order(elevator->queue, elevator->queue->length, order);
+    if (elevator->current_floor!=floor || elevator->state != DOORS_OPEN){
+        elevator->order_matrix->matrix[floor][button]=1;
     }
-    if (elevator->queue->length == 1) {
-        // The queue was empty
-        switch (elevator->state) {
-        case DOORS_CLOSED:
-            if (floor > elevator->current_floor) {
-                elevator->state = GOING_UP;
-                elevio_motorDirection(DIRN_UP);
-            } else {
-                elevator->state = GOING_DOWN;
-                elevio_motorDirection(DIRN_DOWN);
-            }
-            break;
-        case BETWEEN_FLOORS:
-            if (floor > elevator->current_floor) {
-                elevator->state = GOING_UP;
-                elevio_motorDirection(DIRN_UP);
-            } else {
-                elevator->state = GOING_DOWN;
-                elevio_motorDirection(DIRN_DOWN);
-            }
-            break;
-        }
-    }
-    if (floor == elevator->current_floor){
-        elevio_motorDirection(DIRN_STOP);
-        elevator->state = DOORS_OPEN;
+    else {
         reset(elevator->timer, TIMER_DELAY);
+    }
+    if(elevator->state == DOORS_CLOSED || elevator->state==BETWEEN_FLOORS){
+        reset(elevator->timer,0); //cursed
     }
 }
 void on_timer_fire(void *arg) {
     Elevator *p_elevator = (Elevator *)arg;
-    switch (p_elevator->state) {
-    case DOORS_CLOSED:
-        if (p_elevator->queue->length == 0) {
-            p_elevator->state = DOORS_OPEN;
+    
+    State newstate=state_after_completed_order(p_elevator);
+    printf("newstate: %d\n",newstate);
+    switch (newstate){
+        case GOING_DOWN:
+            p_elevator->last_mving_state=p_elevator->state;
+            p_elevator->state=newstate;
+            elevio_motorDirection(DIRN_DOWN);
             break;
-        } else {
-            Order order = get(p_elevator->queue, 0);
-            if (order.floor_number > p_elevator->current_floor) {
-                p_elevator->state = GOING_UP;
-                elevio_motorDirection(DIRN_UP);
-            } else {
-                p_elevator->state = GOING_DOWN;
-                elevio_motorDirection(DIRN_DOWN);
-            }
+        case GOING_UP:
+            p_elevator->last_mving_state=p_elevator->state;
+            p_elevator->state=newstate;
+            elevio_motorDirection(DIRN_UP);
             break;
-        }
-    case DOORS_OPEN:
-        if (p_elevator->queue->length == 0) {
-            p_elevator->state = DOORS_CLOSED;
+        default:
+            p_elevator->state=newstate;
             break;
-        } else {
-            Order order = get(p_elevator->queue, 0);
-            if (order.floor_number > p_elevator->current_floor) {
-                p_elevator->state = GOING_UP;
-                elevio_motorDirection(DIRN_UP);
-            } else {
-                p_elevator->state = GOING_DOWN;
-                elevio_motorDirection(DIRN_DOWN);
-            }
-            break;
-        }
     }
+}
+int should_stop_at_floor(Elevator *elevator){
+    switch (elevator->state){
+        case GOING_DOWN:
+            for(int button=0;button<N_BUTTONS;button++){
+                if ((!button==BUTTON_HALL_UP) && elevator->order_matrix->matrix[elevator->current_floor][button]){
+                    return 1;
+                }
+            }
+            for(int floor=elevator->current_floor-1;floor>=0;floor--){
+                for(int button=0;button<N_BUTTONS;button++){
+                    if(elevator->order_matrix->matrix[floor][button]) return 0;
+                }
+            }
+            return 1;
+            break;
+        case GOING_UP:
+            for(int button=0;button<N_BUTTONS;button++){
+                if ((!button==BUTTON_HALL_DOWN) && elevator->order_matrix->matrix[elevator->current_floor][button]){
+                    return 1;
+                }
+            }
+            for(int floor=elevator->current_floor+1;floor<N_FLOORS;floor++){
+                for(int button=0;button<N_BUTTONS;button++){
+                    if(elevator->order_matrix->matrix[floor][button]) return 0;
+                }
+            }
+            return 1;
+            break;
+        default:
+            printf("function 'should_stop_at_floor' was called from state %d\n",elevator->state);
+            return 1;
+            break;
+    }
+}
+
+State state_after_completed_order(Elevator* elevator){ //Hva om heisen er mellom etasjer?
+    printf("From inside 'state_after_completed_order:\n");
+    print_matrix(elevator->order_matrix);
+    switch (elevator->last_mving_state){
+        case GOING_DOWN:
+            for(int floor = elevator->current_floor-1;floor >= 0; floor--){
+                for(int button=0;button<N_BUTTONS;button++){
+                    if(elevator->order_matrix->matrix[floor][button]) return GOING_DOWN;
+                }
+            }
+            break;
+        default:
+            for(int floor = elevator->current_floor+1;floor < N_FLOORS;floor++){
+                for(int button=0;button<N_BUTTONS;button++){
+                    if(elevator->order_matrix->matrix[floor][button]) return GOING_UP;
+                }
+            }
+            for(int floor = elevator->current_floor-1;floor >= 0; floor--){
+                for(int button=0;button<N_BUTTONS;button++){
+                    if(elevator->order_matrix->matrix[floor][button]) return GOING_DOWN;
+                }
+            }
+            break;
+    }
+    printf("'state_after_completed_order() will return DOORS_CLOSED");
+    return DOORS_CLOSED;
 }
 
 Elevator *elevator_constructor(int floor) {
@@ -111,7 +135,8 @@ Elevator *elevator_constructor(int floor) {
         perror("malloc failed to make Elevator!\n");
         exit(1);
     }
-    elevator->queue = init_queue();
+    elevator->order_matrix = init_matrix();
+    elevator->last_mving_state=DOORS_CLOSED;
     elevator->timer = init_timer(elevator, on_timer_fire);
     switch (floor) {
     case -1:
