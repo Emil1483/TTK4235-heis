@@ -37,15 +37,14 @@ void order(Elevator *elevator, int floor, ButtonType button) {
     Order order;
     order.button_type = button;
     order.floor_number = floor;
-    place_order(elevator->queue, elevator->queue->length, order);
+    if (elevator->current_floor!=floor){
+        place_order(elevator->queue, elevator->queue->length, order);
+    }
     if (elevator->queue->length == 1) {
         // The queue was empty
         switch (elevator->state) {
         case DOORS_CLOSED:
             if (floor > elevator->current_floor) {
-                elevator->state = DOORS_OPEN;
-                remove_orders(elevator->queue, floor);
-            } else if (floor > elevator->current_floor) {
                 elevator->state = GOING_UP;
                 elevio_motorDirection(DIRN_UP);
             } else {
@@ -63,6 +62,11 @@ void order(Elevator *elevator, int floor, ButtonType button) {
             }
             break;
         }
+    }
+    if (floor == elevator->current_floor){
+        elevio_motorDirection(DIRN_STOP);
+        elevator->state = DOORS_OPEN;
+        reset(elevator->timer, TIMER_DELAY);
     }
 }
 void on_timer_fire(void *arg) {
