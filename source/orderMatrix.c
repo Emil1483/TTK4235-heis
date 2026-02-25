@@ -19,6 +19,31 @@ void clear_matrix(OrderMatrix* matrix){
     }
 }
 
+int check_if_order_below(OrderMatrix *matrix, int floorArgument){
+    for(int floor = floorArgument;floor >= 0; floor--){
+        for(int button=0;button<N_BUTTONS;button++){
+            if(matrix->matrix[floor][button]) return 1;
+        }
+    }
+    return 0;
+}
+int check_if_order_above(OrderMatrix *matrix, int floorArgument){
+    for(int floor = floorArgument;floor < N_FLOORS; floor++){
+        for(int button=0;button<N_BUTTONS;button++){
+            if(matrix->matrix[floor][button]) return 1;
+        }
+    }
+    return 0;
+}
+int check_if_order_at_floor(OrderMatrix *matrix, int floor, int button_to_be_ignored){
+    for(int button=0;button<N_BUTTONS;button++){
+        if (!(button==button_to_be_ignored) && matrix->matrix[floor][button]){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 OrderMatrix *init_matrix(){
     OrderMatrix *order_matrix = malloc(sizeof(OrderMatrix));
 

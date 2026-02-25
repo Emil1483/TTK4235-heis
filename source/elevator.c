@@ -84,41 +84,17 @@ void on_timer_fire(void *arg) {
 int should_stop_at_floor(Elevator *elevator){
     switch (elevator->state){
         case GOING_DOWN:
-            for(int button=0;button<N_BUTTONS;button++){
-                if (!(button==BUTTON_HALL_UP) && elevator->order_matrix->matrix[elevator->current_floor][button]){
-                    return 1;
-                }
-            }
-            for(int floor=elevator->current_floor-1;floor>=0;floor--){
-                for(int button=0;button<N_BUTTONS;button++){
-                    if(elevator->order_matrix->matrix[floor][button]) return 0;
-                }
-            }
-            return 1;
+            if (check_if_order_at_floor(elevator->order_matrix, elevator->current_floor, BUTTON_HALL_UP)) return 1;
+            return !check_if_order_below(elevator->order_matrix, elevator->current_floor-1);
             break;
         case GOING_UP:
-            for(int button=0;button<N_BUTTONS;button++){
-                if (!(button==BUTTON_HALL_DOWN) && elevator->order_matrix->matrix[elevator->current_floor][button]){
-                    return 1;
-                }
-            }
-            for(int floor=elevator->current_floor+1;floor<N_FLOORS;floor++){
-                for(int button=0;button<N_BUTTONS;button++){
-                    if(elevator->order_matrix->matrix[floor][button]) return 0;
-                }
-            }
-            return 1;
+            if(check_if_order_at_floor(elevator->order_matrix, elevator->current_floor, BUTTON_HALL_DOWN)) return 1;
+            return !check_if_order_above(elevator->order_matrix, elevator->current_floor);
             break;
         case DOORS_CLOSED:
-            for(int button =0;button<N_BUTTONS;button++){
-                if(elevator->order_matrix->matrix[elevator->current_floor][button]) return 1;
-            }
-            return 0;
+            return (check_if_order_at_floor(elevator->order_matrix, elevator->current_floor, -1));
         case DOORS_OPEN:
-            for(int button =0;button<N_BUTTONS;button++){
-                if(elevator->order_matrix->matrix[elevator->current_floor][button]) return 1;
-            }
-            return 0;
+            return check_if_order_at_floor(elevator->order_matrix, elevator->current_floor, -1);
         default:
             printf("function 'should_stop_at_floor' was called from unexpected state %d\n",elevator->state);
             return 0;
@@ -129,28 +105,12 @@ int should_stop_at_floor(Elevator *elevator){
 State state_after_completed_order(Elevator* elevator){
     switch (elevator->last_mving_state){
         case GOING_DOWN:
-            for(int floor = elevator->current_floor-1;floor >= 0; floor--){
-                for(int button=0;button<N_BUTTONS;button++){
-                    if(elevator->order_matrix->matrix[floor][button]) return GOING_DOWN;
-                }
-            }
-            for(int floor = elevator->current_floor;floor < N_FLOORS; floor++){
-                for(int button=0;button<N_BUTTONS;button++){
-                    if(elevator->order_matrix->matrix[floor][button]) return GOING_UP;
-                }
-            }
+            if(check_if_order_below(elevator->order_matrix, elevator->current_floor-1)) return GOING_DOWN;
+            if(check_if_order_above(elevator->order_matrix, elevator->current_floor)) return GOING_UP;
             break;
         default:
-            for(int floor = elevator->current_floor+1;floor < N_FLOORS;floor++){
-                for(int button=0;button<N_BUTTONS;button++){
-                    if(elevator->order_matrix->matrix[floor][button]) return GOING_UP;
-                }
-            }
-            for(int floor = elevator->current_floor;floor >= 0; floor--){
-                for(int button=0;button<N_BUTTONS;button++){
-                    if(elevator->order_matrix->matrix[floor][button]) return GOING_DOWN;
-                }
-            }
+            if(check_if_order_above(elevator->order_matrix, elevator->current_floor+1)) return GOING_UP;
+            if(check_if_order_below(elevator->order_matrix, elevator->current_floor)) return GOING_DOWN;
             break;
     }
     return DOORS_CLOSED;
