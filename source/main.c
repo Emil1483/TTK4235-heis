@@ -11,7 +11,7 @@ int main() {
 
     struct HardwareReader *reader = hardwareReader_constructor();
 
-    printf("=== Djupvik et. al. ===\n");
+    printf("=== Gaustad et. al. ===\n");
     printf("Press the stop button on the elevator panel to exit\n");
 
     while (1) {
