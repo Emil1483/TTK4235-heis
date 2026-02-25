@@ -7,19 +7,23 @@ void update_floor(Elevator *elevator, int floor) {
         elevator->state = DOORS_CLOSED;
         elevio_motorDirection(DIRN_STOP);
         elevator->current_floor = floor;
+        elevio_floorIndicator(floor);
         return;
     }
 
+    if(elevator->current_floor!=floor) elevio_floorIndicator(floor);
     elevator->current_floor = floor;
 
     if(!should_stop_at_floor(elevator)) return;
 
     for(int button=0;button<N_BUTTONS;button++){
         elevator->order_matrix->matrix[floor][button]=0;
+        elevio_buttonLamp(floor, button, 0);
     }
 
     elevio_motorDirection(DIRN_STOP);
     elevator->state = DOORS_OPEN;
+    elevio_doorOpenLamp(1);
     reset(elevator->timer, TIMER_DELAY);
 }
 void set_stopped(Elevator *elevator, int shouldStop) {}
@@ -28,6 +32,7 @@ void set_obstructed(Elevator *elevator, int obstructed) {
 }
 void order(Elevator *elevator, int floor, ButtonType button) {
     elevator->order_matrix->matrix[floor][button]=1;
+    elevio_buttonLamp(floor, button, 1);
     if(elevator->state == DOORS_CLOSED || elevator->state==BETWEEN_FLOORS){
         reset(elevator->timer,0); //cursed
     }
@@ -38,12 +43,12 @@ void on_timer_fire(void *arg) {
     State newstate=state_after_completed_order(p_elevator);
     switch (newstate){
         case GOING_DOWN:
-            p_elevator->last_mving_state=p_elevator->state;
+            p_elevator->last_mving_state=newstate;
             p_elevator->state=newstate;
             elevio_motorDirection(DIRN_DOWN);
             break;
         case GOING_UP:
-            p_elevator->last_mving_state=p_elevator->state;
+            p_elevator->last_mving_state=newstate;
             p_elevator->state=newstate;
             elevio_motorDirection(DIRN_UP);
             break;
@@ -51,6 +56,7 @@ void on_timer_fire(void *arg) {
             p_elevator->state=newstate;
             break;
     }
+    elevio_doorOpenLamp(0);
 }
 int should_stop_at_floor(Elevator *elevator){
     switch (elevator->state){
@@ -103,6 +109,11 @@ State state_after_completed_order(Elevator* elevator){ //Hva om heisen er mellom
             for(int floor = elevator->current_floor-1;floor >= 0; floor--){
                 for(int button=0;button<N_BUTTONS;button++){
                     if(elevator->order_matrix->matrix[floor][button]) return GOING_DOWN;
+                }
+            }
+            for(int floor = elevator->current_floor+1;floor < N_FLOORS; floor++){
+                for(int button=0;button<N_BUTTONS;button++){
+                    if(elevator->order_matrix->matrix[floor][button]) return GOING_UP;
                 }
             }
             break;
