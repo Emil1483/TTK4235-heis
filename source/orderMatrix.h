@@ -1,5 +1,7 @@
 #pragma once
 #include "driver/elevio.h"
+#include "stdlib.h"
+#include "stdio.h"
 
 typedef struct {
     int matrix[N_FLOORS][N_BUTTONS];
