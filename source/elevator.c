@@ -10,6 +10,7 @@ void update_floor(Elevator *elevator, int floor) {
         elevio_floorIndicator(floor);
         return;
     }
+    if(elevator->state==BETWEEN_FLOORS || elevator->state==STOPPED) return;
 
     if(elevator->current_floor!=floor) elevio_floorIndicator(floor);
     elevator->current_floor = floor;
@@ -26,11 +27,32 @@ void update_floor(Elevator *elevator, int floor) {
     elevio_doorOpenLamp(1);
     reset(elevator->timer, TIMER_DELAY);
 }
-void set_stopped(Elevator *elevator, int shouldStop) {}
+void set_stopped(Elevator *elevator, int shouldStop) {
+    if(shouldStop && elevator->state==STOPPED) return;
+    if(!shouldStop && elevator->state!=STOPPED) return;
+    if(elevator->state==STOPPED){
+        elevator->state=BETWEEN_FLOORS;
+        elevio_stopLamp(0);
+        return;
+    }
+    if(elevator->state==GOING_DOWN || elevator->state==GOING_UP || elevator->state==BETWEEN_FLOORS){
+        elevio_motorDirection(DIRN_STOP);
+        elevator->state=STOPPED;
+        clear_matrix(elevator->order_matrix);
+        elevio_stopLamp(1);
+    }
+    else{
+        elevio_doorOpenLamp(1);
+        clear_matrix(elevator->order_matrix);
+        elevator->state=DOORS_OPEN;
+        reset(elevator->timer, TIMER_DELAY);
+    }
+}
 void set_obstructed(Elevator *elevator, int obstructed) {
     elevator->obstructed = obstructed;
 }
 void order(Elevator *elevator, int floor, ButtonType button) {
+    if (elevator->state==STOPPED) return;
     elevator->order_matrix->matrix[floor][button]=1;
     elevio_buttonLamp(floor, button, 1);
     if(elevator->state == DOORS_CLOSED || elevator->state==BETWEEN_FLOORS){
@@ -103,7 +125,7 @@ int should_stop_at_floor(Elevator *elevator){
     }
 }
 
-State state_after_completed_order(Elevator* elevator){ //Hva om heisen er mellom etasjer?
+State state_after_completed_order(Elevator* elevator){
     switch (elevator->last_mving_state){
         case GOING_DOWN:
             for(int floor = elevator->current_floor-1;floor >= 0; floor--){
@@ -111,7 +133,7 @@ State state_after_completed_order(Elevator* elevator){ //Hva om heisen er mellom
                     if(elevator->order_matrix->matrix[floor][button]) return GOING_DOWN;
                 }
             }
-            for(int floor = elevator->current_floor+1;floor < N_FLOORS; floor++){
+            for(int floor = elevator->current_floor;floor < N_FLOORS; floor++){
                 for(int button=0;button<N_BUTTONS;button++){
                     if(elevator->order_matrix->matrix[floor][button]) return GOING_UP;
                 }
@@ -123,7 +145,7 @@ State state_after_completed_order(Elevator* elevator){ //Hva om heisen er mellom
                     if(elevator->order_matrix->matrix[floor][button]) return GOING_UP;
                 }
             }
-            for(int floor = elevator->current_floor-1;floor >= 0; floor--){
+            for(int floor = elevator->current_floor;floor >= 0; floor--){
                 for(int button=0;button<N_BUTTONS;button++){
                     if(elevator->order_matrix->matrix[floor][button]) return GOING_DOWN;
                 }

@@ -10,6 +10,15 @@ void print_matrix(OrderMatrix* matrix){
     }
 }
 
+void clear_matrix(OrderMatrix* matrix){
+    for(int floor = 0; floor<N_FLOORS;floor++){
+        for(int button=0; button<N_BUTTONS; button++){
+            matrix->matrix[floor][button]=0;
+            elevio_buttonLamp(floor, button, 0);
+        }
+    }
+}
+
 OrderMatrix *init_matrix(){
     OrderMatrix *order_matrix = malloc(sizeof(OrderMatrix));
 

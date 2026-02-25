@@ -5,5 +5,6 @@ typedef struct {
     int matrix[N_FLOORS][N_BUTTONS];
 } OrderMatrix;
 void print_matrix(OrderMatrix* matrix);
+void clear_matrix(OrderMatrix* matrix);
 
 OrderMatrix *init_matrix();
