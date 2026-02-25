@@ -50,6 +50,7 @@ void set_stopped(Elevator *elevator, int shouldStop) {
 }
 void set_obstructed(Elevator *elevator, int obstructed) {
     elevator->obstructed = obstructed;
+    if(obstructed && elevator->state==DOORS_OPEN) reset(elevator->timer,TIMER_DELAY);
 }
 void order(Elevator *elevator, int floor, ButtonType button) {
     if (elevator->state==STOPPED) return;
