@@ -5,9 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct {
+typedef struct
+{
     bool has_started;
     bool is_done;
+    bool waiting;
     pthread_t thread_id;
     float delay;
     void (*on_fire)(void *on_fire_arg);
