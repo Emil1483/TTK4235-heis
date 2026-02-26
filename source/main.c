@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-int main() {
+int main()
+{
     elevio_init();
 
     struct HardwareReader *reader = hardwareReader_constructor();
@@ -14,8 +15,9 @@ int main() {
     printf("=== Gaustad et. al. ===\n");
     printf("Press the stop button on the elevator panel to exit\n");
 
-    while (1) {
-        reader->doReading(reader);
+    while (1)
+    {
+        doReading(reader);
         nanosleep(&(struct timespec){0, 20 * 1000 * 1000}, NULL);
     }
 
