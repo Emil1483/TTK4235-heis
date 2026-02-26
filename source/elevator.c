@@ -29,6 +29,10 @@ void update_floor(Elevator *elevator, int floor)
 
 void set_stopped(Elevator *elevator, int shouldStop)
 {
+    // ref FAT spec O3
+    if (elevator->state == UNKNOWN)
+        return;
+
     // Only do somethig if we're switching to stop or from stop
     if (shouldStop && elevator->state == STOPPED)
         return;
@@ -75,7 +79,7 @@ void on_timer_fire(void *arg)
 void order(Elevator *elevator, int floor, ButtonType button)
 {
 
-    if (elevator->state == STOPPED)
+    if (elevator->state == STOPPED || elevator->state == UNKNOWN)
         return;
 
     if (elevator->state == DOORS_OPEN && elevator->current_floor == floor)
