@@ -52,4 +52,7 @@ void cancel(Timer *timer)
     printf("cancelling timer\n");
     pthread_cancel(timer->thread_id);
     pthread_join(timer->thread_id, NULL);
+    timer->waiting = false;
+    timer->has_started = false;
+    timer->is_done = false;
 }
