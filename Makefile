@@ -53,5 +53,11 @@ $(OBJECTDIR)/%.o: $(SOURCEDIR)/%.c
 	$(COMPILER) -o $@ -c $(CFLAGS) $<
 
 	
-.PHONY: all rebuild clean
+pdf:
+	python3 scripts/render_mermaid.py docs/report.md docs/report_rendered.md
+	pandoc docs/report_rendered.md -o docs/report.html
+	google-chrome --headless --disable-gpu --print-to-pdf=docs/report.pdf docs/report.html
+	rm docs/report_rendered.md docs/report.html
+
+.PHONY: all rebuild clean pdf
 

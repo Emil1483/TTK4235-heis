@@ -1,6 +1,6 @@
 # Docs
 
-Welcome to docs.
+Welcome to docs. For the report, please see [docs/report.pdf](/docs/report.pdf).
 
 ## A.1 Arcitecture
 
@@ -10,54 +10,66 @@ Welcome to docs.
 classDiagram
     Elevator "1" -- "1" HardwareReader
     Elevator "1" -- "1" State
-    Elevator "1" -- "1" Queue
+    Elevator "1" -- "1" OrderMatrix
     Elevator "1" -- "1" Timer
-    Queue "1" -- "1..*" Order
 
     class Elevator {
         -int current_floor
-        -bool obstructed
+        -State last_mving_state
 
         +Elevator(floor_number)
         +order(floor_number, button_type)
         +setStopped(stopped)
         +update_floor(floor)
         +set_obstructed(obstructed)
+        -should_stop_at_floor()
+        -state_after_completed_order()
+        -update_state(state)
     }
 
     class Timer {
+        -bool has_started
+        -bool is_done
+        -bool waiting
+        -thread_id
+        -float delay
+        -void on_fire
+
         +reset(delay)
         +cancel()
+        +Timer(on_fire)
     }
 
-    class Queue {
-        +get(index)
-        +place(index, order)
-        +remove(floor_number)
-    }
+    class OrderMatrix {
+        - matrix : int[N_FLOORS][N_BUTTONS]
 
-    class Order {
-        ButtonType button_type
-        int floor_number
+        +check_if_order_below(floorArgument)
+        +check_if_order_at_floor(floor, button_to_be_ignored)
+        +check_if_order_above(floor)
+        +clear_matrix()
+        +matrix_is_empty()
     }
 
     class State {
         <<enumeration>>
+        UNKNOWN
+        DOORS_CLOSED
+        GOING_DOWN
+        STOPPED
+        BETWEEN_FLOORS
         GOING_UP
         DOORS_OPEN
-        STOPPED
-        GOING_DOWN
     }
 
     class ButtonType {
         <<enumeration>>
-        HALL_UP
-        HALL_DOWN
-        CABIN
+        BUTTON_HALL_UP
+        BUTTON_HALL_DOWN
+        BUTTON_CAB
     }
 
     class HardwareReader {
-        +loop()
+        +doReading()
     }
 ```
 
@@ -79,11 +91,11 @@ sequenceDiagram
         HR->>H: Read stop button
         H->>HR: Return should stop
 
-        HR->>E: setStopped
+        HR->>E: set_stopped
 
         HR->>H: Read obstruction sensor
         H->>HR: Return is obstructed
-        HR->>E: set obstructed
+        HR->>E: set_obstructed
 
         loop for each button
             HR->>H: Read order button
