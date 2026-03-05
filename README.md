@@ -1,6 +1,6 @@
 # Docs
 
-Welcome to docs. For the report, please see [docs/report.pdf](/docs/report.pdf).
+Welcome to docs. For the report, please see [docs/report.pdf](/report/report.pdf).
 
 ## A.1 Arcitecture
 

@@ -1,5 +1,9 @@
 # Rapport
 
+## Forfattere
+
+Dette prosjektet er utført av **Emil Gaustad** og **Emil Djupvik**. Gruppenummer **24**.
+
 ## Innledning
 
 Dette prosjektet er gjennomført som en del av emnet TTK4235 Tilpassede datasystemer, og omhandler design og implementasjon av en heiskontroller i C. Målet har vært å lage et system som styrer en fysisk heismodell med fire etasjer.

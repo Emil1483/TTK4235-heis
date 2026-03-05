@@ -26,6 +26,8 @@ rebuild: clean all
 clean:
 	rm -f $(EXECUTABLE)
 	rm -rf $(OBJECTDIR)
+	rm -f report/report.pdf
+	rm -rf report/mermaid_imgs
 
 test: $(TEST_BINS)
 	@echo "Running tests..."
@@ -54,10 +56,10 @@ $(OBJECTDIR)/%.o: $(SOURCEDIR)/%.c
 
 	
 pdf:
-	python3 scripts/render_mermaid.py docs/report.md docs/report_rendered.md
-	pandoc docs/report_rendered.md -o docs/report.html
-	google-chrome --headless --disable-gpu --print-to-pdf=docs/report.pdf docs/report.html
-	rm docs/report_rendered.md docs/report.html
+	python3 scripts/render_mermaid.py report/report.md report/report_rendered.md
+	pandoc report/report_rendered.md -o report/report.html
+	google-chrome --headless --disable-gpu --print-to-pdf=report/report.pdf report/report.html
+	rm report/report_rendered.md report/report.html
 
 .PHONY: all rebuild clean pdf
 
